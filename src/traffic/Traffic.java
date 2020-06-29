@@ -1,5 +1,6 @@
 package traffic;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class Traffic {
@@ -27,41 +28,59 @@ public class Traffic {
     static int NS = 1;
 
     public static void main(String[] args) {
+        Map<Integer, String> statesNames = Map.ofEntries(
+                Map.entry(EW_GO, "EW_GO"),
+                Map.entry(EW_STOPPING, "EW_STOPPING"),
+                Map.entry(NS_GO, "NS_GO"),
+                Map.entry(NS_STOPPING, "NS_STOPPING")
+        );
+        Map<Integer, String> events = Map.of(T1, "Timer");
 
-        String[] statesNames = {"EW_GO", "EW_STOPPING", "NS_GO", "NS_STOPPING"};
-        String[] events = {"Timer"};
         int[] lights = new int[2];
-
         Timer timer = new Timer();
 
-        Consumer<Integer> ew_yellow = (Integer event) -> {
+        Consumer<Integer> ew_yellow = event -> {
             lights[EW] |= YELLOW;
             timer.set(YELLOW_TIME);
         };
 
-        Consumer<Integer> ns_yellow = (Integer event) -> {
+        Consumer<Integer> ns_yellow = event -> {
             lights[NS] |= YELLOW;
             timer.set(YELLOW_TIME);
         };
 
-        Consumer<Integer> ew_green = (Integer event) -> {
+        Consumer<Integer> ew_green = event -> {
             lights[EW] = GREEN;
             lights[NS] = RED;
             timer.set(GREEN_TIME);
         };
 
-        Consumer<Integer> ns_green = (Integer event) -> {
+        Consumer<Integer> ns_green = event -> {
             lights[NS] = GREEN;
             lights[EW] = RED;
             timer.set(GREEN_TIME);
         };
 
-        Delta[] ew_go = {new Delta(T1, EW_STOPPING, ew_yellow)};
-        Delta[] ew_stopping = {new Delta(T1, NS_GO, ns_green)};
-        Delta[] ns_go = {new Delta(T1, NS_STOPPING, ns_yellow)};
-        Delta[] ns_stopping = {new Delta(T1, NS_GO, ew_green)};
+        Map<Integer, Delta> ew_go = Map.of(
+                T1, new Delta(EW_STOPPING, ew_yellow)
+        );
+        Map<Integer, Delta> ew_stopping = Map.of(
+                T1, new Delta(NS_GO, ns_green)
+        );
+        Map<Integer, Delta> ns_go = Map.of(
+                T1, new Delta(NS_STOPPING, ns_yellow)
+        );
+        Map<Integer, Delta> ns_stopping = Map.of(
+                T1, new Delta(EW_GO, ew_green)
+        );
 
-        Delta[][] deltas = {ew_go, ew_stopping, ns_go, ns_stopping};
+
+        Map<Integer, Map<Integer, Delta>> deltas = Map.ofEntries(
+                Map.entry(EW_GO, ew_go),
+                Map.entry(EW_STOPPING, ew_stopping),
+                Map.entry(NS_GO, ns_go),
+                Map.entry(NS_STOPPING, ns_stopping)
+        );
 
         Mealy mealy = new Mealy(
                 statesNames,
@@ -83,12 +102,14 @@ public class Traffic {
                     System.out.printf("EW: %c%c%c\n",
                             (lights[EW] & RED) != 0 ? 'R' : '_',
                             (lights[EW] & YELLOW) != 0 ? 'W' : '_',
-                            (lights[EW] & GREEN) != 0 ? 'G' : '_');
+                            (lights[EW] & GREEN) != 0 ? 'G' : '_'
+                    );
 
                     System.out.printf("NS: %c%c%c\n",
                             (lights[NS] & RED) != 0 ? 'R' : '_',
                             (lights[NS] & YELLOW) != 0 ? 'W' : '_',
-                            (lights[NS] & GREEN) != 0 ? 'G' : '_');
+                            (lights[NS] & GREEN) != 0 ? 'G' : '_'
+                    );
                 }
                 clock = System.currentTimeMillis();
             }

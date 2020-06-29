@@ -1,27 +1,29 @@
 package traffic;
 
+import java.util.Map;
+
 public class Mealy {
 
-    String[] statesNames;
-    String[] events;
-    Delta[][] deltas;
+    Map<Integer, String> statesNames;
+    Map<Integer, String> events;
+    Map<Integer, Map<Integer, Delta>> deltas;
     int currentState;
 
-    public Mealy(String[] states, String[] events, int initialState, Delta[][] deltas) {
-        this.statesNames = states;
+    public Mealy(Map<Integer, String> statesNames, Map<Integer, String> events, int initialState, Map<Integer, Map<Integer, Delta>> deltas) {
+        this.statesNames = statesNames;
         this.events = events;
         this.currentState = initialState;
         this.deltas = deltas;
     }
 
     public void transition(int event) {
-        int newState = deltas[currentState][event].nextState;
+        int newState = deltas.get(currentState).get(event).nextState;
         System.out.printf("%s + %s -> %s\n",
-                statesNames[currentState],
-                events[event],
-                statesNames[newState]
+                statesNames.get(currentState),
+                events.get(event),
+                statesNames.get(newState)
         );
-        deltas[currentState][event].deltaFunction.accept(event);
+        deltas.get(currentState).get(event).deltaFunction.accept(event);
         currentState = newState;
     }
 
